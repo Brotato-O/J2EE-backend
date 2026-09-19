@@ -1,0 +1,44 @@
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# Gradle
+.gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# Eclipse / STS (Loại bỏ triệt để .classpath, .project, .settings,...)
+.classpath
+.project
+.settings/
+.factorypath
+.apt_generated
+.apt_generated_tests
+.springBeans
+.sts4-cache
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# VS Code
+.vscode/
+
+# OS / System
+.DS_Store
+Thumbs.db
+*.log
+HELP.md
