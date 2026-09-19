@@ -1,0 +1,18 @@
+services:
+	mysql:
+		image: mysql:8.4
+		container_name: j2ee-mysql
+		restart: unless-stopped
+		env_file:
+			- .env
+		environment:
+			MYSQL_DATABASE: da1
+			MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+		ports:
+			- "3306:3306"
+		volumes:
+			- mysql_data:/var/lib/mysql
+			- ../da1_full.sql:/docker-entrypoint-initdb.d/da1_full.sql:ro
+
+volumes:
+	mysql_data:

@@ -12,6 +12,9 @@ public enum ErrorCode {
     BRAND_NOT_FOUND(2003, "Không tìm thấy thương hiệu"),
     CATEGORY_NOT_FOUND(2004, "Không tìm thấy danh mục"),
     SUPPLIER_NOT_FOUND(2005, "Không tìm thấy nhà cung cấp"),
+    PRODUCT_NOT_FOUND(2006, "Không tìm thấy sản phẩm"),
+    VARIANT_NOT_FOUND(2007, "Không tìm thấy biến thể sản phẩm"),
+    BRAND_REQUIRED(2008, "Thương hiệu là bắt buộc"),
     INVALID_REQUEST(400, "Dữ liệu đầu vào không hợp lệ");
 
     private final int code;
