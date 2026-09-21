@@ -1,9 +1,11 @@
 package J2EE.com.example.project.controller.user;
 
 import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
+
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import J2EE.com.example.project.dto.request.user.UserCreateRequest;
@@ -18,67 +20,87 @@ import J2EE.com.example.project.service.UserService;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final UserService userService;
+        private final UserService userService;
 
-    @GetMapping
-    public ApiResponse<PageResponse<UserResponse>> getAllUsers(
-            Pageable pageable) {
+        // =========================
+        // LẤY DANH SÁCH USER
+        // Admin + Nhân viên
+        // =========================
+        @GetMapping
+        @PreAuthorize("hasAnyRole('Admin', 'Nhân Viên')")
+        public ApiResponse<PageResponse<UserResponse>> getAllUsers(
+                        Pageable pageable) {
 
-        return ApiResponse.<PageResponse<UserResponse>>builder()
-                .code(200)
-                .message("Lấy danh sách users thành công")
-                .data(userService.getAllUsers(pageable))
-                .build();
-    }
+                return ApiResponse.<PageResponse<UserResponse>>builder()
+                                .code(200)
+                                .message("Lấy danh sách users thành công")
+                                .data(userService.getAllUsers(pageable))
+                                .build();
+        }
 
-    @GetMapping("/{id}")
-    public ApiResponse<UserResponse> getUserById(
-            @PathVariable Integer id) {
+        // =========================
+        // LẤY USER THEO ID
+        // Admin + User + Nhân viên
+        // =========================
+        @GetMapping("/{id}")
+        @PreAuthorize("hasAnyRole('Admin', 'User', 'Nhân Viên')")
+        public ApiResponse<UserResponse> getUserById(
+                        @PathVariable Integer id) {
 
-        return ApiResponse.<UserResponse>builder()
-                .code(200)
-                .message("Lấy thông tin user thành công")
-                .data(
-                        userService.getUserById(id))
-                .build();
-    }
+                return ApiResponse.<UserResponse>builder()
+                                .code(200)
+                                .message("Lấy thông tin user thành công")
+                                .data(userService.getUserById(id))
+                                .build();
+        }
 
-    @PostMapping
-    public ApiResponse<UserResponse> createUser(
-            @Valid @RequestBody UserCreateRequest request) {
+        // =========================
+        // TẠO USER
+        // Chỉ Admin
+        // =========================
+        @PostMapping
+        @PreAuthorize("hasRole('Admin')")
+        public ApiResponse<UserResponse> createUser(
+                        @Valid @RequestBody UserCreateRequest request) {
 
-        return ApiResponse.<UserResponse>builder()
-                .code(200)
-                .message("Tạo user thành công")
-                .data(
-                        userService.createUser(request))
-                .build();
-    }
+                return ApiResponse.<UserResponse>builder()
+                                .code(200)
+                                .message("Tạo user thành công")
+                                .data(userService.createUser(request))
+                                .build();
+        }
 
-    @PutMapping("/{id}")
-    public ApiResponse<UserResponse> updateUser(
-            @PathVariable Integer id,
-            @Valid @RequestBody UserUpdateRequest request) {
+        // =========================
+        // CẬP NHẬT USER
+        // Chỉ Admin
+        // =========================
+        @PutMapping("/{id}")
+        @PreAuthorize("hasRole('Admin')")
+        public ApiResponse<UserResponse> updateUser(
+                        @PathVariable Integer id,
+                        @Valid @RequestBody UserUpdateRequest request) {
 
-        return ApiResponse.<UserResponse>builder()
-                .code(200)
-                .message("Cập nhật user thành công")
-                .data(
-                        userService.updateUser(
-                                id,
-                                request))
-                .build();
-    }
+                return ApiResponse.<UserResponse>builder()
+                                .code(200)
+                                .message("Cập nhật user thành công")
+                                .data(userService.updateUser(id, request))
+                                .build();
+        }
 
-    @DeleteMapping("/{id}")
-    public ApiResponse<Void> deleteUser(
-            @PathVariable Integer id) {
+        // =========================
+        // XÓA USER
+        // Chỉ Admin
+        // =========================
+        @DeleteMapping("/{id}")
+        @PreAuthorize("hasRole('Admin')")
+        public ApiResponse<Void> deleteUser(
+                        @PathVariable Integer id) {
 
-        userService.deleteUser(id);
+                userService.deleteUser(id);
 
-        return ApiResponse.<Void>builder()
-                .code(200)
-                .message("Xóa user thành công")
-                .build();
-    }
+                return ApiResponse.<Void>builder()
+                                .code(200)
+                                .message("Xóa user thành công")
+                                .build();
+        }
 }
