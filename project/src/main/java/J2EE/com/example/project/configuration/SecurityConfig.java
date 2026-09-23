@@ -1,25 +1,27 @@
 package J2EE.com.example.project.configuration;
 
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import J2EE.com.example.project.service.impl.CustomUserDetailsService;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import J2EE.com.example.project.service.impl.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 
 @Configuration
@@ -27,63 +29,102 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+        private final JwtAuthenticationFilter jwtAuthenticationFilter;
+        private final CustomUserDetailsService userDetailsService;
 
-    private final CustomUserDetailsService userDetailsService;
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
+        }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+        @Bean
+        public AuthenticationProvider authenticationProvider() {
+                DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
 
-    @Bean
-    public AuthenticationProvider authenticationProvider() {
+                provider.setPasswordEncoder(passwordEncoder());
 
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
+                return provider;
+        }
 
-        provider.setPasswordEncoder(passwordEncoder());
+        @Bean
+        public AuthenticationManager authenticationManager(
+                        AuthenticationConfiguration configuration) throws Exception {
 
-        return provider;
-    }
+                return configuration.getAuthenticationManager();
+        }
 
-    @Bean
-    public AuthenticationManager authenticationManager(
-            AuthenticationConfiguration configuration) throws Exception {
+        // =========================
+        // CORS
+        // =========================
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
 
-        return configuration.getAuthenticationManager();
-    }
+                CorsConfiguration configuration = new CorsConfiguration();
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(
-            HttpSecurity http) throws Exception {
+                // Frontend React
+                configuration.setAllowedOrigins(
+                                List.of("http://localhost:5173"));
 
-        http
-                // Không dùng CSRF cho REST API + JWT
-                .csrf(csrf -> csrf.disable())
+                // Các method frontend được phép gọi
+                configuration.setAllowedMethods(
+                                List.of(
+                                                "GET",
+                                                "POST",
+                                                "PUT",
+                                                "DELETE",
+                                                "PATCH",
+                                                "OPTIONS"));
 
-                // JWT không sử dụng session
-                .sessionManagement(session -> session.sessionCreationPolicy(
-                        SessionCreationPolicy.STATELESS))
+                // Cho phép Authorization header chứa JWT
+                configuration.setAllowedHeaders(
+                                List.of("*"));
 
-                .authenticationProvider(
-                        authenticationProvider())
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
-                .authorizeHttpRequests(auth -> auth
+                source.registerCorsConfiguration("/**", configuration);
 
-                        // Đăng ký và đăng nhập không cần token
-                        .requestMatchers(
-                                "/api/v1/auth/register",
-                                "/api/v1/auth/login")
-                        .permitAll()
+                return source;
+        }
 
-                        // Các API còn lại bắt buộc đăng nhập
-                        .anyRequest().authenticated())
+        // =========================
+        // SECURITY
+        // =========================
+        @Bean
+        public SecurityFilterChain securityFilterChain(
+                        HttpSecurity http) throws Exception {
 
-                // JWT filter chạy trước filter xác thực mặc định
-                .addFilterBefore(
-                        jwtAuthenticationFilter,
-                        UsernamePasswordAuthenticationFilter.class);
+                http
 
-        return http.build();
-    }
+                                // CORS
+                                .cors(cors -> {
+                                })
+
+                                // Không dùng CSRF cho REST API + JWT
+                                .csrf(csrf -> csrf.disable())
+
+                                // JWT không sử dụng session
+                                .sessionManagement(session -> session.sessionCreationPolicy(
+                                                SessionCreationPolicy.STATELESS))
+
+                                .authenticationProvider(
+                                                authenticationProvider())
+
+                                .authorizeHttpRequests(auth -> auth
+
+                                                // Login / Register không cần JWT
+                                                .requestMatchers(
+                                                                "/api/v1/auth/register",
+                                                                "/api/v1/auth/login")
+                                                .permitAll()
+
+                                                // Các API còn lại bắt buộc đăng nhập
+                                                .anyRequest().authenticated())
+
+                                // JWT filter
+                                .addFilterBefore(
+                                                jwtAuthenticationFilter,
+                                                UsernamePasswordAuthenticationFilter.class);
+
+                return http.build();
+        }
 }
