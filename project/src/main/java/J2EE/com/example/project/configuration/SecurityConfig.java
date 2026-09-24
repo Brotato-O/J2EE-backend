@@ -23,6 +23,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import J2EE.com.example.project.service.impl.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpMethod;
 
 @Configuration
 @EnableMethodSecurity
@@ -115,6 +116,17 @@ public class SecurityConfig {
                                                 .requestMatchers(
                                                                 "/api/v1/auth/register",
                                                                 "/api/v1/auth/login")
+                                                .permitAll()
+                                                // Khách vãng lai được xem danh sách sản phẩm
+                                                .requestMatchers(
+                                                                HttpMethod.GET,
+                                                                "/api/v1/products")
+                                                .permitAll()
+
+                                                // Khách vãng lai được xem chi tiết sản phẩm
+                                                .requestMatchers(
+                                                                HttpMethod.GET,
+                                                                "/api/v1/products/**")
                                                 .permitAll()
 
                                                 // Các API còn lại bắt buộc đăng nhập
