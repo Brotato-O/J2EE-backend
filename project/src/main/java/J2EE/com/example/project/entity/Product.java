@@ -1,5 +1,6 @@
 package J2EE.com.example.project.entity;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,7 +42,7 @@ public class Product {
     private String image;
 
     @Column(name = "pro_price", nullable = false)
-    private Float price;
+    private BigDecimal price;
 
     @Column(name = "pro_desc", nullable = false, columnDefinition = "TEXT")
     private String description;

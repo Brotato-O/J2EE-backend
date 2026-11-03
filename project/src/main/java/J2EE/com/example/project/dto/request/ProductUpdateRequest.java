@@ -6,6 +6,7 @@ import java.util.List;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
@@ -25,10 +26,6 @@ public class ProductUpdateRequest {
     @Size(max = 255, message = "Ảnh sản phẩm không được vượt quá 255 ký tự")
     private String image;
 
-    @NotNull(message = "Giá sản phẩm không được để trống")
-    @Min(value = 0, message = "Giá sản phẩm không được nhỏ hơn 0")
-    private Float price;
-
     @NotBlank(message = "Mô tả sản phẩm không được để trống")
     private String description;
 
@@ -44,8 +41,11 @@ public class ProductUpdateRequest {
     @NotNull(message = "Tồn kho sản phẩm không được để trống")
     @Min(value = 0, message = "Tồn kho sản phẩm không được nhỏ hơn 0")
     private Integer stock;
+    @NotNull(message = "Giá sản phẩm không được để trống")
+    @Min(value = 0, message = "Giá sản phẩm không được nhỏ hơn 0")
+    private Float price;
 
     @Valid
-    @NotNull(message = "Danh sách biến thể không được để trống")
+    @NotEmpty(message = "Sản phẩm phải có ít nhất một biến thể")
     private List<VariantRequest> variants = new ArrayList<>();
 }

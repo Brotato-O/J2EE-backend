@@ -128,6 +128,7 @@ public class SecurityConfig {
                                                                 HttpMethod.GET,
                                                                 "/api/v1/products/**")
                                                 .permitAll()
+                                                .requestMatchers("/api/cart/**").permitAll()
 
                                                 // Các API còn lại bắt buộc đăng nhập
                                                 .anyRequest().authenticated())

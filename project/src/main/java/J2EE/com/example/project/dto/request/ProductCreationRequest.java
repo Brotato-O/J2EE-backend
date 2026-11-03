@@ -26,10 +26,6 @@ public class ProductCreationRequest {
     @Size(max = 255, message = "Ảnh sản phẩm không được vượt quá 255 ký tự")
     private String image;
 
-    @NotNull(message = "Giá sản phẩm không được để trống")
-    @Min(value = 0, message = "Giá sản phẩm không được nhỏ hơn 0")
-    private Float price;
-
     @NotBlank(message = "Mô tả sản phẩm không được để trống")
     private String description;
 
@@ -45,6 +41,10 @@ public class ProductCreationRequest {
     @NotNull(message = "Tồn kho sản phẩm không được để trống")
     @Min(value = 0, message = "Tồn kho sản phẩm không được nhỏ hơn 0")
     private Integer stock;
+
+    @NotNull(message = "Giá sản phẩm không được để trống")
+    @Min(value = 0, message = "Giá sản phẩm không được nhỏ hơn 0")
+    private Float price;
 
     @Valid
     @NotEmpty(message = "Sản phẩm phải có ít nhất một biến thể")
