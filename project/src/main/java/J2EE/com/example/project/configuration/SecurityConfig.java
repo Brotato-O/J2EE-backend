@@ -140,6 +140,11 @@ public class SecurityConfig {
                                                 .permitAll()
                                                 .requestMatchers("/api/cart/**").permitAll()
 
+                                                // Cho phép truy cập công khai vào các file ảnh tĩnh
+                                                .requestMatchers("/images/**", "/uploads/**", "/static/**", "/*.png",
+                                                                "/*.jpg", "/*.svg")
+                                                .permitAll()
+
                                                 // Các API còn lại bắt buộc đăng nhập
                                                 .anyRequest().authenticated())
 
