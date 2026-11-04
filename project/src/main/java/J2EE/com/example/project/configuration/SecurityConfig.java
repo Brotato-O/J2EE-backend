@@ -65,6 +65,8 @@ public class SecurityConfig {
                 // Frontend React
                 configuration.setAllowedOrigins(
                                 List.of("http://localhost:5173"));
+                // configuration.setAllowedOriginPatterns(
+                // List.of("*")); // Cho phép tất cả để test Postman
 
                 // Các method frontend được phép gọi
                 configuration.setAllowedMethods(
@@ -106,6 +108,14 @@ public class SecurityConfig {
                                 // JWT không sử dụng session
                                 .sessionManagement(session -> session.sessionCreationPolicy(
                                                 SessionCreationPolicy.STATELESS))
+                                // ===== THÊM ĐOẠN NÀY VÀO =====
+                                .exceptionHandling(ex -> ex
+                                                .authenticationEntryPoint((request, response, authException) -> {
+                                                        System.out.println("LỖI XÁC THỰC: " + request.getRequestURI()
+                                                                        + " - " + authException.getMessage());
+                                                        response.sendError(401, "Unauthorized");
+                                                }))
+                                // ===============================
 
                                 .authenticationProvider(
                                                 authenticationProvider())
