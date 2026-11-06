@@ -3,6 +3,7 @@ package J2EE.com.example.project.service.impl;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,10 +48,32 @@ public class ProductServiceImpl implements ProductService {
     private final NhaCungCapRepository nhaCungCapRepository;
     private final SizeRepository sizeRepository;
     private final ColorRepository colorRepository;
+    @Value("${cloudinary.cloud-name}")
+    private String cloudName;
+
+    private String buildCloudinaryUrl(String publicId) {
+        if (publicId == null || publicId.isBlank()) {
+            return null;
+        }
+
+        return "https://res.cloudinary.com/" + cloudName
+                + "/image/upload/" + publicId;
+    }
+
+    private ProductResponse toResponse(Product product) {
+        ProductResponse response = productMapper.toResponse(product);
+
+        response.setImage(buildCloudinaryUrl(product.getImage()));
+
+        return response;
+    }
 
     @Override
     public PageResponse<ProductResponse> getAll(Pageable pageable) {
-        var page = productRepository.findAllByStatus(ACTIVE_STATUS, pageable).map(productMapper::toResponse);
+        var page = productRepository
+                .findAllByStatus(ACTIVE_STATUS, pageable)
+                .map(this::toResponse);
+
         return PageResponse.<ProductResponse>builder()
                 .content(page.getContent())
                 .pageNo(page.getNumber() + 1)
@@ -63,28 +86,45 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductResponse getById(Integer id) {
-        return productMapper.toResponse(findById(id));
+        return toResponse(findById(id));
     }
 
     @Override
     @Transactional
     public ProductResponse create(ProductCreationRequest request) {
         Product product = productMapper.toEntity(request);
-        applyReferences(product, request.getBrandId(), request.getCategoryId(), request.getSupplierId());
+
+        applyReferences(
+                product,
+                request.getBrandId(),
+                request.getCategoryId(),
+                request.getSupplierId()
+        );
+
         for (VariantRequest variantRequest : request.getVariants()) {
             product.addVariant(toVariant(variantRequest));
         }
-        return productMapper.toResponse(productRepository.save(product));
+
+        return toResponse(productRepository.save(product));
     }
 
     @Override
     @Transactional
     public ProductResponse update(Integer id, ProductUpdateRequest request) {
         Product product = findById(id);
+
         productMapper.updateEntity(request, product);
-        applyReferences(product, request.getBrandId(), request.getCategoryId(), request.getSupplierId());
+
+        applyReferences(
+                product,
+                request.getBrandId(),
+                request.getCategoryId(),
+                request.getSupplierId()
+        );
+
         synchronizeVariants(product, request);
-        return productMapper.toResponse(productRepository.save(product));
+
+        return toResponse(productRepository.save(product));
     }
 
     @Override

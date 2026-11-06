@@ -39,6 +39,18 @@ public class CartItem {
     @Column(name = "total_price", nullable = false, precision = 12, scale = 2)
     private BigDecimal totalPrice;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "pro_id", nullable = false)
+    private Product product;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "color_id", nullable = false)
+    private Color color;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "size_id", nullable = false)
+    private Size size;
+
     public void updateQuantity(Integer quantity) {
         this.quantity = quantity;
         this.totalPrice = price.multiply(BigDecimal.valueOf(quantity));

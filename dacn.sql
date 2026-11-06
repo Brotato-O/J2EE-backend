@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 03, 2026 at 04:02 PM
+-- Generation Time: Nov 06, 2026 at 08:09 AM
 -- Server version: 10.4.32-MariaDB
--- PHP Version: 8.0.30
+-- PHP Version: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `da3`
+-- Database: `dacn`
 --
 
 -- --------------------------------------------------------
@@ -60,35 +60,39 @@ CREATE TABLE `cart_chitiet` (
   `ctiet_pro_id` int(10) NOT NULL COMMENT 'ID biến thể sản phẩm',
   `price` decimal(12,2) NOT NULL COMMENT 'Đơn giá tại thời điểm thêm vào giỏ',
   `soluong` int(11) NOT NULL COMMENT 'Số lượng',
-  `total_price` decimal(12,2) NOT NULL COMMENT 'Thành tiền'
+  `total_price` decimal(12,2) NOT NULL COMMENT 'Thành tiền',
+  `color_id` int(11) NOT NULL,
+  `pro_id` int(11) NOT NULL,
+  `size_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 --
 -- Dumping data for table `cart_chitiet`
 --
 
-INSERT INTO `cart_chitiet` (`cart_chitiet_id`, `cart_id`, `ctiet_pro_id`, `price`, `soluong`, `total_price`) VALUES
-(1, 1, 135, 130.00, 2, 260.00),
-(2, 1, 98, 100.00, 2, 200.00),
-(3, 1, 158, 134.00, 1, 134.00),
-(4, 2, 156, 300.00, 2, 600.00),
-(5, 3, 27, 50.00, 1, 50.00),
-(6, 3, 44, 50.00, 2, 100.00),
-(7, 3, 92, 120.00, 2, 240.00),
-(8, 4, 95, 120.00, 1, 120.00),
-(9, 4, 126, 130.00, 1, 130.00),
-(10, 4, 14, 200.00, 2, 400.00),
-(11, 5, 37, 150.00, 2, 300.00),
-(12, 5, 77, 300.00, 1, 300.00),
-(13, 6, 24, 50.00, 2, 100.00),
-(14, 6, 19, 200.00, 2, 400.00),
-(15, 6, 89, 130.00, 1, 130.00),
-(16, 7, 27, 50.00, 1, 50.00),
-(17, 7, 10, 300.00, 2, 600.00),
-(18, 8, 117, 145.00, 2, 290.00),
-(19, 8, 156, 300.00, 1, 300.00),
-(20, 8, 82, 300.00, 2, 600.00),
-(83, 9, 10, 300.00, 2, 600.00);
+INSERT INTO `cart_chitiet` (`cart_chitiet_id`, `cart_id`, `ctiet_pro_id`, `price`, `soluong`, `total_price`, `color_id`, `pro_id`, `size_id`) VALUES
+(1, 1, 135, 130.00, 2, 260.00, 0, 0, 0),
+(2, 1, 98, 100.00, 2, 200.00, 0, 0, 0),
+(3, 1, 158, 134.00, 1, 134.00, 0, 0, 0),
+(4, 2, 156, 300.00, 2, 600.00, 0, 0, 0),
+(5, 3, 27, 50.00, 1, 50.00, 0, 0, 0),
+(6, 3, 44, 50.00, 2, 100.00, 0, 0, 0),
+(7, 3, 92, 120.00, 2, 240.00, 0, 0, 0),
+(8, 4, 95, 120.00, 1, 120.00, 0, 0, 0),
+(9, 4, 126, 130.00, 1, 130.00, 0, 0, 0),
+(10, 4, 14, 200.00, 2, 400.00, 0, 0, 0),
+(11, 5, 37, 150.00, 2, 300.00, 0, 0, 0),
+(12, 5, 77, 300.00, 1, 300.00, 0, 0, 0),
+(13, 6, 24, 50.00, 2, 100.00, 0, 0, 0),
+(14, 6, 19, 200.00, 2, 400.00, 0, 0, 0),
+(15, 6, 89, 130.00, 1, 130.00, 0, 0, 0),
+(16, 7, 27, 50.00, 1, 50.00, 0, 0, 0),
+(17, 7, 10, 300.00, 2, 600.00, 0, 0, 0),
+(18, 8, 117, 145.00, 2, 290.00, 0, 0, 0),
+(19, 8, 156, 300.00, 1, 300.00, 0, 0, 0),
+(20, 8, 82, 300.00, 2, 600.00, 0, 0, 0),
+(84, 9, 158, 134.00, 2, 268.00, 3, 41, 1),
+(86, 9, 46, 50.00, 1, 50.00, 1, 51, 3);
 
 -- --------------------------------------------------------
 
@@ -1601,30 +1605,30 @@ CREATE TABLE `products` (
 --
 
 INSERT INTO `products` (`pro_id`, `pro_name`, `pro_img`, `pro_price`, `pro_desc`, `pro_brand`, `pro_stock`, `cate_id`, `ncc_id`, `trangthai`, `pro_viewer`) VALUES
-(41, 'Fleece Hoodies For Men and Women Patchwork Stripe Hooded', 'clothes_1.jpg', 134.00, 'Usually We Will Send Out the Goods Within 3 - 7 Days by Fast and Reliable Shipping Methods. As different computers display colors differently, the color of the actual item may very slightly from the above images.', 'Lining', 600, 10, 1, 0, 1),
-(43, 'School Leavers Hoodie - School Leavers 2023 Hoodie - Class Of 2023 Hoodie', 'clothes_2.jpg', 300.00, 'Usually We Will Send Out the Goods Within 3 - 7 Days by Fast and Reliable Shipping Methods. Your Happy Shopping Experience and Five Star Feedback is Very Important to Us.', 'Nice', 177, 10, 2, 0, 0),
-(44, 'Branded Premium Basic Mesh Shorts', 'clothes_3.jpg', 200.00, 'Branded Premium Basic Mesh Shorts Mesh 2 Pockets Eric Emanuel New York City Skyline Basketball shorts', 'Lining', 493, 14, 3, 0, 0),
-(45, 'High Waist Trousers Pants Palazzo Bottoms Casual Loose Wide Leg Long Harem', 'clothes_4.jpg', 50.00, 'Usually We Will Send Out the Goods Within 3 - 7 Days by Fast and Reliable Shipping Methods. Please Feel Free to Contact Us if You Have Any Questions.', 'Lining', 252, 12, 4, 0, 0),
-(46, 'Wizard Frog Corduroy Hat, Handmade Embroidered Corduroy Dad Cap', 'clothes_5.jpg', 50.00, 'All clothes are tailored and handmade with love and attention to details. Pure natural linen materials, comfortable, breathable, refreshing and soft fabric', 'Nice', 265, 11, 5, 0, 1),
-(47, 'Women Linen Blazer, Linen Jacket Linen Blazer 3/4 Sleeves Coat', 'clothes_6.jpg', 300.00, 'All clothes are tailored and handmade with love and attention to details. Pure natural linen materials, comfortable, breathable, refreshing and soft fabric', 'Nice', 657, 9, 6, 0, 2),
-(48, 'Masculine-cut Blazer with Contrasting Details', 'clothes_7.jpg', 150.00, 'An oversize blazer with masculine cut and contrasting seam details. An avant-garde piece with linen and tulle elements. Bold addition to any elegant outfit.', 'Need', 328, 9, 7, 0, 0),
-(49, 'Sorrows, Sorrows, Prayers Tshirt, Queen Charlotte Fan Shirt, Bridgerton T-Shirt', 'clothes_8.jpg', 100.00, 'Unisex Heavy Cotton Tee Gildan 5000: Medium fabric - Classic fit - Runs true to size - 100% cotton - Tear-away label.', 'Lining', 274, 13, 8, 0, 2),
-(51, 'Hat Embroidered Hat Dad Hat Womens Baseball Cap Man Hat', 'clothes_10.jpg', 50.00, 'Usually We Will Send Out the Goods Within 3 - 7 Days by Fast and Reliable Shipping Methods. Your Happy Shopping Experience is Very Important to Us.', 'Lining', 276, 11, 9, 0, 0),
-(52, 'Chicken Sweatshirt, Farm Life Sweater, Chicken Lover Sweater, Easter Retro Sweater', 'clothes_11.jpg', 130.00, 'Welcome to Prime Tee Lab. Your all-inclusive stop for all custom sweatshirt, hoodie, and gift needs. We print on the highest quality garments!', 'Nice', 388, 15, 10, 0, 0),
-(53, 'Have A Good Day Hoodie- Trendy sweatshirt, hoodie', 'clothes_12.jpg', 300.00, 'Have A Good Day Hoodie- Trendy sweatshirt, hoodie, Sweatshirt and hoodies with words on back. Hey there, welcome to my store!', 'Thosc', 522, 10, 1, 0, 5),
-(54, 'Floral Embroidered Cap, Baseball Cap, Custom Embroidery Hat, Hand Embroidery Hat', 'clothes_13.jpg', 50.00, 'A pretty hand embroidered cap that is perfect for everyday wear! Available in different colors and designs.', 'Lining', 351, 11, 2, 0, 2),
-(55, 'Drawstring Pants - Spring Summer Trousers - Pockets', 'clothes_14.jpg', 300.00, 'Stay comfortable and stylish with these cotton and linen drawstring pants for women. Designed with a basic style and loose fit, these mid-waist trousers have a nine-point length.', 'Nice', 654, 12, 3, 0, 1),
-(56, 'Loose linen blazer PLACID Long sleeve light linen jacket Linen womens clothing', 'clothes_15.jpg', 300.00, 'Womens linen blazer PLACID in lightweight linen with front button closure is an autumn wardrobes essential', 'Need', 759, 9, 4, 0, 2),
-(57, 'Baseball Hat with Embroidery - Embroidered & Cap Color of your choice! Dad Hat', 'clothes_16.jpg', 130.00, 'Please let us know if you have a specific date that you would like to receive by. Orders that have been shipped out are non-refundable.', 'Thosc', 370, 11, 5, 0, 1),
-(58, 'Embroidered Silly Goose Sweatshirt, Embroidered Goose Crewneck Sweats', 'clothes_17.jpg', 120.00, 'This embroidered Silly Goose sweatshirt is super soft and cozy. Perfect to lounge around, run errands, or walk your dog.', 'Densnis', 280, 15, 6, 0, 2),
-(59, 'Embroidered Hat Initial cap Personalized Ball cap Custom Hat Mens Hat 90s Vintage', 'clothes_18.jpg', 100.00, 'Personalize these comfortable and stylish dad hats to say whatever you like. A traditional baseball cap is a great way to show off your style.', 'Need', 336, 11, 7, 0, 4),
-(60, 'Thin Cotton Blazer Loose Linen Jackets Pockets Soft Linen Coats Three Quarter Single Button', 'clothes_19.jpg', 300.00, 'Cotton Blazer Loose Linen Jackets Pockets Soft Linen Coats Three Quarter Single Button. Please refer to the final image for size chart before ordering.', 'Densnis', 675, 9, 8, 0, 3),
-(61, 'Fashion Sweaters Men Autumn Solid Color Wool Sweaters Slim Fit', 'clothes_20.jpg', 145.00, 'Fashion Sweaters Men Autumn Solid Color Wool Sweaters Slim Fit Men Street Wear Mens Clothes Knitted Sweater Men Pullovers', 'Lining', 589, 15, 9, 0, 2),
-(62, 'portrait from photo to shirt, outline photo sweatshirt, Custom Photo, Couple Hoodie', 'clothes_21.jpg', 130.00, 'Set-in sleeve 1x1 rib at neck collar Inside back neck tape in self fabric Tubular construction Comfortable crew neckline', 'Need', 596, 10, 10, 0, 5),
-(63, 'Cotton Corduroy Pant Elastic Waist Pants Womens Soft Warm trousers baggy pants Casual', 'clothes_22.jpg', 130.00, 'All our items are Tailored and Handmade and Made to Order, I can make Any Size. I design new styles every week, please collect my store.', 'Densnis', 416, 12, 1, 0, 5),
-(64, 'Knitted Sweater Little Dinosaur, Unisex, Winter Harajuku', 'clothes_23.jpg', 160.00, 'Super soft comfortable knitted sweater. A perfect gift for streetwear style lovers and a perfect harajuku outfit.', 'Thosc', 446, 15, 2, 0, 4),
-(65, 'Japanese Harajuku Style Hoodies, Streetwear Oversized Hoodie, Thick Winter Autumn Pullover', 'clothes_24.jpg', 300.00, 'Recommend ordering two sizes up. MATERIAL: Cotton, Polyester. It is printed with eco-friendly ink. Soft and comfy hoodie with a print of Japanese graphic art.', 'Densnis', 350, 10, 3, 0, 11),
-(66, 'Unleash Your Summer Swag with High-Quality Fear Of God Shorts for Men and Women', 'clothes_25.jpg', 300.00, 'Upgrade your summer wardrobe with our exclusive collection of Essentials Shorts for both men and women! Discover the perfect blend of comfort and style.', 'Lining', 684, 14, 4, 0, 40);
+(41, 'Fleece Hoodies For Men and Women Patchwork Stripe Hooded', 'products/1', 134.00, 'Usually We Will Send Out the Goods Within 3 - 7 Days by Fast and Reliable Shipping Methods. As different computers display colors differently, the color of the actual item may very slightly from the above images.', 'Lining', 600, 10, 1, 0, 1),
+(43, 'School Leavers Hoodie - School Leavers 2023 Hoodie - Class Of 2023 Hoodie', 'products/2', 300.00, 'Usually We Will Send Out the Goods Within 3 - 7 Days by Fast and Reliable Shipping Methods. Your Happy Shopping Experience and Five Star Feedback is Very Important to Us.', 'Nice', 177, 10, 2, 0, 0),
+(44, 'Branded Premium Basic Mesh Shorts', 'products/3', 200.00, 'Branded Premium Basic Mesh Shorts Mesh 2 Pockets Eric Emanuel New York City Skyline Basketball shorts', 'Lining', 493, 14, 3, 0, 0),
+(45, 'High Waist Trousers Pants Palazzo Bottoms Casual Loose Wide Leg Long Harem', 'products/4', 50.00, 'Usually We Will Send Out the Goods Within 3 - 7 Days by Fast and Reliable Shipping Methods. Please Feel Free to Contact Us if You Have Any Questions.', 'Lining', 252, 12, 4, 0, 0),
+(46, 'Wizard Frog Corduroy Hat, Handmade Embroidered Corduroy Dad Cap', 'products/5', 50.00, 'All clothes are tailored and handmade with love and attention to details. Pure natural linen materials, comfortable, breathable, refreshing and soft fabric', 'Nice', 265, 11, 5, 0, 1),
+(47, 'Women Linen Blazer, Linen Jacket Linen Blazer 3/4 Sleeves Coat', 'products/6', 300.00, 'All clothes are tailored and handmade with love and attention to details. Pure natural linen materials, comfortable, breathable, refreshing and soft fabric', 'Nice', 657, 9, 6, 0, 2),
+(48, 'Masculine-cut Blazer with Contrasting Details', 'products/7', 150.00, 'An oversize blazer with masculine cut and contrasting seam details. An avant-garde piece with linen and tulle elements. Bold addition to any elegant outfit.', 'Need', 328, 9, 7, 0, 0),
+(49, 'Sorrows, Sorrows, Prayers Tshirt, Queen Charlotte Fan Shirt, Bridgerton T-Shirt', 'products/8', 100.00, 'Unisex Heavy Cotton Tee Gildan 5000: Medium fabric - Classic fit - Runs true to size - 100% cotton - Tear-away label.', 'Lining', 274, 13, 8, 0, 2),
+(51, 'Hat Embroidered Hat Dad Hat Womens Baseball Cap Man Hat', 'products/9', 50.00, 'Usually We Will Send Out the Goods Within 3 - 7 Days by Fast and Reliable Shipping Methods. Your Happy Shopping Experience is Very Important to Us.', 'Lining', 276, 11, 9, 0, 0),
+(52, 'Chicken Sweatshirt, Farm Life Sweater, Chicken Lover Sweater, Easter Retro Sweater', 'products/10', 130.00, 'Welcome to Prime Tee Lab. Your all-inclusive stop for all custom sweatshirt, hoodie, and gift needs. We print on the highest quality garments!', 'Nice', 388, 15, 10, 0, 0),
+(53, 'Have A Good Day Hoodie- Trendy sweatshirt, hoodie', 'products/11', 300.00, 'Have A Good Day Hoodie- Trendy sweatshirt, hoodie, Sweatshirt and hoodies with words on back. Hey there, welcome to my store!', 'Thosc', 522, 10, 1, 0, 5),
+(54, 'Floral Embroidered Cap, Baseball Cap, Custom Embroidery Hat, Hand Embroidery Hat', 'products/12', 50.00, 'A pretty hand embroidered cap that is perfect for everyday wear! Available in different colors and designs.', 'Lining', 351, 11, 2, 0, 2),
+(55, 'Drawstring Pants - Spring Summer Trousers - Pockets', 'products/13', 300.00, 'Stay comfortable and stylish with these cotton and linen drawstring pants for women. Designed with a basic style and loose fit, these mid-waist trousers have a nine-point length.', 'Nice', 654, 12, 3, 0, 1),
+(56, 'Loose linen blazer PLACID Long sleeve light linen jacket Linen womens clothing', 'products/14', 300.00, 'Womens linen blazer PLACID in lightweight linen with front button closure is an autumn wardrobes essential', 'Need', 759, 9, 4, 0, 2),
+(57, 'Baseball Hat with Embroidery - Embroidered & Cap Color of your choice! Dad Hat', 'products/15', 130.00, 'Please let us know if you have a specific date that you would like to receive by. Orders that have been shipped out are non-refundable.', 'Thosc', 370, 11, 5, 0, 1),
+(58, 'Embroidered Silly Goose Sweatshirt, Embroidered Goose Crewneck Sweats', 'products/16', 120.00, 'This embroidered Silly Goose sweatshirt is super soft and cozy. Perfect to lounge around, run errands, or walk your dog.', 'Densnis', 280, 15, 6, 0, 2),
+(59, 'Embroidered Hat Initial cap Personalized Ball cap Custom Hat Mens Hat 90s Vintage', 'products/17', 100.00, 'Personalize these comfortable and stylish dad hats to say whatever you like. A traditional baseball cap is a great way to show off your style.', 'Need', 336, 11, 7, 0, 4),
+(60, 'Thin Cotton Blazer Loose Linen Jackets Pockets Soft Linen Coats Three Quarter Single Button', 'products/18', 300.00, 'Cotton Blazer Loose Linen Jackets Pockets Soft Linen Coats Three Quarter Single Button. Please refer to the final image for size chart before ordering.', 'Densnis', 675, 9, 8, 0, 3),
+(61, 'Fashion Sweaters Men Autumn Solid Color Wool Sweaters Slim Fit', 'products/19', 145.00, 'Fashion Sweaters Men Autumn Solid Color Wool Sweaters Slim Fit Men Street Wear Mens Clothes Knitted Sweater Men Pullovers', 'Lining', 589, 15, 9, 0, 2),
+(62, 'portrait from photo to shirt, outline photo sweatshirt, Custom Photo, Couple Hoodie', 'products/20', 130.00, 'Set-in sleeve 1x1 rib at neck collar Inside back neck tape in self fabric Tubular construction Comfortable crew neckline', 'Need', 596, 10, 10, 0, 5),
+(63, 'Cotton Corduroy Pant Elastic Waist Pants Womens Soft Warm trousers baggy pants Casual', 'products/21', 130.00, 'All our items are Tailored and Handmade and Made to Order, I can make Any Size. I design new styles every week, please collect my store.', 'Densnis', 416, 12, 1, 0, 5),
+(64, 'Knitted Sweater Little Dinosaur, Unisex, Winter Harajuku', 'products/22', 160.00, 'Super soft comfortable knitted sweater. A perfect gift for streetwear style lovers and a perfect harajuku outfit.', 'Thosc', 446, 15, 2, 0, 4),
+(65, 'Japanese Harajuku Style Hoodies, Streetwear Oversized Hoodie, Thick Winter Autumn Pullover', 'products/23', 300.00, 'Recommend ordering two sizes up. MATERIAL: Cotton, Polyester. It is printed with eco-friendly ink. Soft and comfy hoodie with a print of Japanese graphic art.', 'Densnis', 350, 10, 3, 0, 11),
+(66, 'Unleash Your Summer Swag with High-Quality Fear Of God Shorts for Men and Women', 'products/24', 300.00, 'Upgrade your summer wardrobe with our exclusive collection of Essentials Shorts for both men and women! Discover the perfect blend of comfort and style.', 'Lining', 684, 14, 4, 0, 40);
 
 -- --------------------------------------------------------
 
@@ -2327,7 +2331,7 @@ ALTER TABLE `cart`
 -- AUTO_INCREMENT for table `cart_chitiet`
 --
 ALTER TABLE `cart_chitiet`
-  MODIFY `cart_chitiet_id` int(10) NOT NULL AUTO_INCREMENT COMMENT 'ID chi tiết giỏ hàng', AUTO_INCREMENT=84;
+  MODIFY `cart_chitiet_id` int(10) NOT NULL AUTO_INCREMENT COMMENT 'ID chi tiết giỏ hàng', AUTO_INCREMENT=87;
 
 --
 -- AUTO_INCREMENT for table `category`

@@ -22,13 +22,15 @@ public class ImageController {
         this.imageService = imageService;
     }
 
-    @GetMapping("/{id}")
+    @GetMapping
     public ResponseEntity<ApiResponse<ImageResponse>> getImageByPublicId(
-            @PathVariable String publicId
+            @RequestParam String publicId
     ) {
         ImageResponse response =
                 imageService.getImageByPublicId(publicId);
 
-        return ResponseEntity.ok(ApiResponse.success("Lấy ảnh thành công", response));
+        return ResponseEntity.ok(
+                ApiResponse.success("Lấy ảnh thành công", response)
+        );
     }
 }

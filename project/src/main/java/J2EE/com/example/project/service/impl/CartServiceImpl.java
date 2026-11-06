@@ -76,18 +76,27 @@ public class CartServiceImpl implements CartService {
 
                 if (item == null) {
                         item = CartItem.builder()
-                                        .cart(cart)
-                                        .variant(variant)
-                                        .quantity(newQuantity)
-                                        .price(price)
-                                        .totalPrice(
-                                                        price.multiply(BigDecimal.valueOf(newQuantity)))
-                                        .build();
+                                .cart(cart)
+                                .variant(variant)
+
+                                // Lấy thông tin từ biến thể
+                                .product(variant.getProduct())
+                                .color(variant.getColor())
+                                .size(variant.getSize())
+
+                                .quantity(newQuantity)
+                                .price(price)
+                                .totalPrice(
+                                        price.multiply(BigDecimal.valueOf(newQuantity))
+                                )
+                                .build();
                 } else {
                         item.setQuantity(newQuantity);
                         item.setTotalPrice(
-                                        item.getPrice().multiply(
-                                                        BigDecimal.valueOf(newQuantity)));
+                                item.getPrice().multiply(
+                                        BigDecimal.valueOf(newQuantity)
+                                )
+                        );
                 }
 
                 cartItemRepository.save(item);
