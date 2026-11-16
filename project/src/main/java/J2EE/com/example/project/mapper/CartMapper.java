@@ -7,8 +7,9 @@ import org.mapstruct.Mapping;
 
 import J2EE.com.example.project.dto.response.CartItemResponse;
 import J2EE.com.example.project.entity.CartItem;
+import J2EE.com.example.project.ImageUrlBuilder;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = ImageUrlBuilder.class)
 public interface CartMapper {
 
     @Mapping(target = "id", source = "id")
@@ -16,7 +17,7 @@ public interface CartMapper {
     @Mapping(target = "sku", source = "variant.sku")
     @Mapping(target = "productId", source = "variant.product.id")
     @Mapping(target = "productName", source = "variant.product.name")
-    @Mapping(target = "image", source = "variant.product.image")
+    @Mapping(target = "image", source = "variant.product.image", qualifiedByName = "toImageUrl")
     @Mapping(target = "color", source = "variant.color.name")
     @Mapping(target = "size", source = "variant.size.name")
     @Mapping(target = "quantity", source = "quantity")

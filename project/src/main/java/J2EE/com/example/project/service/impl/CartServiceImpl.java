@@ -9,6 +9,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import J2EE.com.example.project.ImageUrlBuilder;
 import J2EE.com.example.project.dto.request.AddToCartRequest;
 import J2EE.com.example.project.dto.request.UpdateCartItemRequest;
 import J2EE.com.example.project.dto.response.CartItemResponse;
@@ -36,6 +37,7 @@ public class CartServiceImpl implements CartService {
         private final ProChitietRepository variantRepository;
         private final KhachHangRepository khachHangRepository;
         private final CartMapper cartMapper;
+        private final ImageUrlBuilder imageUrlBuilder;
 
         @Override
         public CartResponse getMyCart() {
@@ -76,27 +78,24 @@ public class CartServiceImpl implements CartService {
 
                 if (item == null) {
                         item = CartItem.builder()
-                                .cart(cart)
-                                .variant(variant)
+                                        .cart(cart)
+                                        .variant(variant)
 
-                                // Lấy thông tin từ biến thể
-                                .product(variant.getProduct())
-                                .color(variant.getColor())
-                                .size(variant.getSize())
+                                        // Lấy thông tin từ biến thể
+                                        .product(variant.getProduct())
+                                        .color(variant.getColor())
+                                        .size(variant.getSize())
 
-                                .quantity(newQuantity)
-                                .price(price)
-                                .totalPrice(
-                                        price.multiply(BigDecimal.valueOf(newQuantity))
-                                )
-                                .build();
+                                        .quantity(newQuantity)
+                                        .price(price)
+                                        .totalPrice(
+                                                        price.multiply(BigDecimal.valueOf(newQuantity)))
+                                        .build();
                 } else {
                         item.setQuantity(newQuantity);
                         item.setTotalPrice(
-                                item.getPrice().multiply(
-                                        BigDecimal.valueOf(newQuantity)
-                                )
-                        );
+                                        item.getPrice().multiply(
+                                                        BigDecimal.valueOf(newQuantity)));
                 }
 
                 cartItemRepository.save(item);
