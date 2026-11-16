@@ -3,6 +3,7 @@ package J2EE.com.example.project.repository;
 
 import java.util.Optional;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -14,6 +15,7 @@ public interface KhachHangRepository
 
     boolean existsByEmail(String email);
 
+    @EntityGraph(attributePaths = {"vaiTro"})
     Optional<KhachHang> findByEmail(String email);
 
     Optional<KhachHang> findByName(String name);

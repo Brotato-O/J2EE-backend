@@ -6,6 +6,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,7 +14,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "thuong_hieu")
+@Table(name = "thuong_hieu", uniqueConstraints = @UniqueConstraint(
+        name = "uk_thuong_hieu_name", columnNames = "ten_thuong_hieu"))
 @Getter
 @Setter
 @Builder

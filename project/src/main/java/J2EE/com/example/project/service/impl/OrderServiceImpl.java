@@ -3,7 +3,6 @@ package J2EE.com.example.project.service.impl;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
@@ -28,20 +27,17 @@ import J2EE.com.example.project.repository.OrderDetailRepository;
 import J2EE.com.example.project.repository.OrderRepository;
 import J2EE.com.example.project.repository.ProChitietRepository;
 import J2EE.com.example.project.service.OrderService;
+import J2EE.com.example.project.service.OrderLifecycleService;
+import J2EE.com.example.project.exception.AppException;
+import J2EE.com.example.project.exception.ErrorCode;
+import J2EE.com.example.project.enums.FulfillmentStatus;
+import J2EE.com.example.project.enums.PaymentMethod;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class OrderServiceImpl implements OrderService {
-    // Trạng thái hợp lệ của đơn hàng
-    private static final String STATUS_PENDING = "Chờ xác nhận";
-    private static final String STATUS_CONFIRMED = "Đã xác nhận";
-    private static final String STATUS_SHIPPING = "Đang giao";
-    private static final String STATUS_DELIVERED = "Đã giao hàng";
-    private static final String STATUS_CANCELLED = "Đã hủy";
-    private static final Set<String> VALID_STATUSES = Set.of(
-            STATUS_PENDING, STATUS_CONFIRMED, STATUS_SHIPPING, STATUS_DELIVERED, STATUS_CANCELLED);
     private final OrderRepository orderRepository;
     private final OrderDetailRepository orderDetailRepository;
     private final CartRepository cartRepository;
@@ -49,6 +45,7 @@ public class OrderServiceImpl implements OrderService {
     private final ProChitietRepository proChitietRepository;
     private final KhachHangRepository khachHangRepository;
     private final OrderMapper orderMapper;
+    private final OrderLifecycleService lifecycleService;
 
     // ===================== CUSTOMER OPERATIONS =====================
     @Override
@@ -56,10 +53,10 @@ public class OrderServiceImpl implements OrderService {
         KhachHang khachHang = getCurrentCustomer();
         // 1. Lấy giỏ hàng của khách hàng
         Cart cart = cartRepository.findByUserId(khachHang.getId())
-                .orElseThrow(() -> new IllegalStateException("Giỏ hàng không tồn tại"));
+                .orElseThrow(() -> new AppException(ErrorCode.CART_NOT_FOUND));
         List<CartItem> cartItems = cartItemRepository.findAllByCartId(cart.getId());
         if (cartItems.isEmpty()) {
-            throw new IllegalStateException("Giỏ hàng đang trống, không thể đặt hàng");
+            throw new AppException(ErrorCode.CART_EMPTY);
         }
         // 2. Tính tổng tiền
         int totalPrice = cartItems.stream()
@@ -70,9 +67,11 @@ public class OrderServiceImpl implements OrderService {
         Order order = Order.builder()
                 .khachHang(khachHang)
                 .orderDate(today)
-                .status(STATUS_PENDING)
+                .status(FulfillmentStatus.NEW.getDisplayName())
                 .address(request.getAddress())
                 .totalPrice(totalPrice)
+                .paymentMethod(request.getPaymentMethod() == null
+                        ? PaymentMethod.VIETQR : request.getPaymentMethod())
                 .build();
         order = orderRepository.save(order);
         // 4. Tạo OrderDetail từ CartItem + trừ tồn kho
@@ -81,9 +80,7 @@ public class OrderServiceImpl implements OrderService {
             // Kiểm tra tồn kho
             int currentStock = variant.getStockQuantity() == null ? 0 : variant.getStockQuantity();
             if (cartItem.getQuantity() > currentStock) {
-                throw new IllegalStateException(
-                        "Sản phẩm '" + variant.getProduct().getName()
-                                + "' không đủ số lượng trong kho (còn " + currentStock + ")");
+                throw new AppException(ErrorCode.STOCK_EXCEEDED);
             }
             // Tạo OrderDetail
             OrderDetail detail = OrderDetail.builder()
@@ -104,7 +101,7 @@ public class OrderServiceImpl implements OrderService {
         cartItemRepository.deleteAllByCartId(cart.getId());
         // 6. Load lại order để lấy details đã lưu
         Order savedOrder = orderRepository.findById(order.getId())
-                .orElseThrow(() -> new IllegalStateException("Lỗi hệ thống: không tìm thấy đơn hàng vừa tạo"));
+                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
         List<OrderDetail> details = orderDetailRepository.findByOrderId(savedOrder.getId());
         savedOrder.setDetails(details);
         return orderMapper.toResponse(savedOrder);
@@ -128,7 +125,7 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponse getMyOrderById(Integer orderId) {
         KhachHang khachHang = getCurrentCustomer();
         Order order = orderRepository.findByIdAndKhachHangId(orderId, khachHang.getId())
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng #" + orderId));
+                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
         List<OrderDetail> details = orderDetailRepository.findByOrderId(order.getId());
         order.setDetails(details);
         return orderMapper.toResponse(order);
@@ -138,11 +135,10 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponse cancelOrder(Integer orderId) {
         KhachHang khachHang = getCurrentCustomer();
         Order order = orderRepository.findByIdAndKhachHangId(orderId, khachHang.getId())
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng #" + orderId));
+                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
         // Chỉ được hủy khi trạng thái là "Chờ xác nhận"
-        if (!STATUS_PENDING.equals(order.getStatus())) {
-            throw new IllegalStateException(
-                    "Không thể hủy đơn hàng ở trạng thái '" + order.getStatus() + "'");
+        if (!FulfillmentStatus.NEW.getDisplayName().equals(order.getStatus())) {
+            throw new AppException(ErrorCode.INVALID_ORDER_TRANSITION);
         }
         // Cộng lại tồn kho
         List<OrderDetail> details = orderDetailRepository.findByOrderId(order.getId());
@@ -160,10 +156,12 @@ public class OrderServiceImpl implements OrderService {
                         proChitietRepository.save(variant);
                     });
         }
-        order.setStatus(STATUS_CANCELLED);
-        order.setDetails(details);
-        orderRepository.save(order);
-        return orderMapper.toResponse(order);
+        Order cancelledOrder = lifecycleService.transition(
+                orderId,
+                FulfillmentStatus.CANCELLED,
+                "Customer cancelled order");
+        cancelledOrder.setDetails(details);
+        return orderMapper.toResponse(cancelledOrder);
     }
 
     // ===================== ADMIN OPERATIONS =====================
@@ -196,15 +194,12 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public OrderResponse updateStatus(Integer orderId, UpdateOrderStatusRequest request) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng #" + orderId));
+                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
         String newStatus = request.getStatus().trim();
-        if (!VALID_STATUSES.contains(newStatus)) {
-            throw new IllegalArgumentException(
-                    "Trạng thái '" + newStatus + "' không hợp lệ. "
-                            + "Các trạng thái hợp lệ: " + VALID_STATUSES);
-        }
+        FulfillmentStatus target = parseStatus(newStatus);
         // Nếu đang chuyển sang Đã hủy từ trạng thái != Chờ xác nhận → cộng lại tồn kho
-        if (STATUS_CANCELLED.equals(newStatus) && !STATUS_CANCELLED.equals(order.getStatus())) {
+        if (FulfillmentStatus.CANCELLED == parseStatus(newStatus)
+                && FulfillmentStatus.CANCELLED != FulfillmentStatus.fromValue(order.getStatus())) {
             List<OrderDetail> details = orderDetailRepository.findByOrderId(order.getId());
             for (OrderDetail detail : details) {
                 proChitietRepository
@@ -220,11 +215,19 @@ public class OrderServiceImpl implements OrderService {
                         });
             }
         }
-        order.setStatus(newStatus);
-        orderRepository.save(order);
+        lifecycleService.transition(orderId, target, "Manual status update");
+        order.setStatus(target.name());
         List<OrderDetail> details = orderDetailRepository.findByOrderId(order.getId());
         order.setDetails(details);
         return orderMapper.toResponse(order);
+    }
+
+    private FulfillmentStatus parseStatus(String status) {
+        try {
+            return FulfillmentStatus.fromValue(status);
+        } catch (IllegalArgumentException exception) {
+            throw new AppException(ErrorCode.INVALID_ORDER_STATUS);
+        }
     }
 
     // ===================== PRIVATE HELPERS =====================
@@ -232,10 +235,10 @@ public class OrderServiceImpl implements OrderService {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()
                 || "anonymousUser".equals(auth.getPrincipal())) {
-            throw new IllegalStateException("Bạn cần đăng nhập");
+            throw new AppException(ErrorCode.AUTHENTICATION_REQUIRED);
         }
         String email = auth.getName();
         return khachHangRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalStateException("Không tìm thấy khách hàng"));
+                .orElseThrow(() -> new AppException(ErrorCode.CUSTOMER_NOT_FOUND));
     }
 }

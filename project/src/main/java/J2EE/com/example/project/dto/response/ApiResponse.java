@@ -1,5 +1,6 @@
 package J2EE.com.example.project.dto.response;
 
+import J2EE.com.example.project.exception.SuccessCode;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,6 +18,14 @@ public class ApiResponse<T> {
         return ApiResponse.<T>builder()
                 .code(200)
                 .message(message)
+                .data(data)
+                .build();
+    }
+
+    public static <T> ApiResponse<T> success(SuccessCode successCode, T data) {
+        return ApiResponse.<T>builder()
+                .code(successCode.getCode())
+                .message(successCode.getMessage())
                 .data(data)
                 .build();
     }

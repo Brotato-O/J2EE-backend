@@ -35,7 +35,7 @@ public class KhachHang {
     @Column(name = "trangthai")
     private Integer status;
 
-    @ManyToOne
-    @JoinColumn(name = "vaitro_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "vaitro_id", nullable = false)
     private VaiTro vaiTro;
 }

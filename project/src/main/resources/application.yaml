@@ -1,11 +1,8 @@
 spring:
   application:
     name: project
-
-  security:
-    user:
-      name: admin
-      password: 123
+  config:
+    import: optional:file:.env[.properties]
 
   datasource:
     url: ${DB_URL:jdbc:mysql://localhost:3306/dacn}
@@ -18,14 +15,61 @@ spring:
       ddl-auto: update
     open-in-view: false
 
-  liquibase:
-    enabled: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: ${FLYWAY_BASELINE_ON_MIGRATE:false}
+    baseline-version: ${FLYWAY_BASELINE_VERSION:0}
   
   jwt:
-    secret: ${JWT_SECRET:mySecretKeyForJwtAuthenticationProject2026VeryLongKey}
+    secret: ${JWT_SECRET:}
     expiration: ${JWT_EXPIRATION:86400000}
 
+app:
+  ghtk:
+    enabled: ${GHTK_ENABLED:false}
+    base-url: ${GHTK_BASE_URL:}
+    api-token: ${GHTK_API_TOKEN:}
+    client-source: ${GHTK_CLIENT_SOURCE:}
+    create-order-url: ${GHTK_CREATE_ORDER_URL:}
+    tracking-url-template: ${GHTK_TRACKING_URL_TEMPLATE:}
+    cancel-url-template: ${GHTK_CANCEL_URL_TEMPLATE:}
+    webhook-hash: ${GHTK_WEBHOOK_HASH:}
+    connect-timeout: ${GHTK_CONNECT_TIMEOUT:3s}
+    read-timeout: ${GHTK_READ_TIMEOUT:10s}
+    max-attempts: ${GHTK_MAX_ATTEMPTS:3}
+  vietqr:
+    enabled: ${VIETQR_ENABLED:false}
+    api-base-url: ${VIETQR_API_BASE_URL:}
+    api-token: ${VIETQR_API_TOKEN:}
+    secret-key: ${VIETQR_SECRET_KEY:}
+    bank-bin: ${VIETQR_BANK_BIN:}
+    bank-account: ${VIETQR_BANK_ACCOUNT:}
+    account-name: ${VIETQR_ACCOUNT_NAME:}
+    terminal-code: ${VIETQR_TERMINAL_CODE:}
+    qr-image-url-template: ${VIETQR_QR_IMAGE_URL_TEMPLATE:https://img.vietqr.io/image/{bankBin}-{accountNumber}-compact2.png?amount={amount}&addInfo={reference}&accountName={accountName}}
+    webhook-secret: ${VIETQR_WEBHOOK_SECRET:}
+    expiration: ${VIETQR_EXPIRATION:PT15M}
+  vnpay:
+    enabled: ${VNPAY_ENABLED:false}
+    payment-url: ${VNPAY_PAYMENT_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
+    tmn-code: ${VNPAY_TMN_CODE:}
+    hash-secret: ${VNPAY_HASH_SECRET:}
+    return-url: ${VNPAY_RETURN_URL:}
+    ipn-url: ${VNPAY_IPN_URL:}
+    webhook-secret: ${VNPAY_WEBHOOK_SECRET:}
+    expiration: ${VNPAY_EXPIRATION:PT15M}
+  momo:
+    enabled: ${MOMO_ENABLED:false}
+    endpoint: ${MOMO_ENDPOINT:https://test-payment.momo.vn/v2/gateway/api/create}
+    partner-code: ${MOMO_PARTNER_CODE:}
+    access-key: ${MOMO_ACCESS_KEY:}
+    secret-key: ${MOMO_SECRET_KEY:}
+    redirect-url: ${MOMO_REDIRECT_URL:}
+    ipn-url: ${MOMO_IPN_URL:}
+    webhook-secret: ${MOMO_WEBHOOK_SECRET:}
+    expiration: ${MOMO_EXPIRATION:PT15M}
+
 cloudinary:
-  cloud-name: ${CLOUDINARY_CLOUD_NAME:qmniujya}
-  api-key: ${CLOUDINARY_API_KEY:813952214522431}
-  api-secret: ${CLOUDINARY_API_SECRET:1SE99ziHhUKmocYmLFTgo-37hx0}
+  cloud-name: ${CLOUDINARY_CLOUD_NAME}
+  api-key: ${CLOUDINARY_API_KEY}
+  api-secret: ${CLOUDINARY_API_SECRET}

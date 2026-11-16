@@ -1,6 +1,7 @@
 package J2EE.com.example.project.entity;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -20,6 +21,16 @@ public class CartItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "cart_chitiet_id")
     private Integer id;
+
+    @Version
+    @Builder.Default
+    private Long version = 0L;
+
+    @Column(name = "created_at", nullable = false)
+    private Instant createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "cart_id", nullable = false)
@@ -54,5 +65,17 @@ public class CartItem {
     public void updateQuantity(Integer quantity) {
         this.quantity = quantity;
         this.totalPrice = price.multiply(BigDecimal.valueOf(quantity));
+    }
+
+    @PrePersist
+    void prePersist() {
+        Instant now = Instant.now();
+        createdAt = now;
+        updatedAt = now;
+    }
+
+    @PreUpdate
+    void preUpdate() {
+        updatedAt = Instant.now();
     }
 }

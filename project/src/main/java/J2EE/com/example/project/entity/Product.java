@@ -1,6 +1,7 @@
 package J2EE.com.example.project.entity;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,7 +15,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -34,6 +38,16 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "pro_id")
     private Integer id;
+
+    @Version
+    @Builder.Default
+    private Long version = 0L;
+
+    @Column(name = "created_at", nullable = false)
+    private Instant createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
 
     @Column(name = "pro_name", nullable = false, length = 255)
     private String name;
@@ -74,7 +88,7 @@ public class Product {
     @Builder.Default
     private Integer viewer = 0;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     @Builder.Default
     private List<ProChitiet> variants = new ArrayList<>();
 
@@ -84,7 +98,20 @@ public class Product {
     }
 
     public void removeVariant(ProChitiet variant) {
-        variants.remove(variant);
-        variant.setProduct(null);
+        if (variants.contains(variant)) {
+            variant.setStatus(0);
+        }
+    }
+
+    @PrePersist
+    void prePersist() {
+        Instant now = Instant.now();
+        createdAt = now;
+        updatedAt = now;
+    }
+
+    @PreUpdate
+    void preUpdate() {
+        updatedAt = Instant.now();
     }
 }

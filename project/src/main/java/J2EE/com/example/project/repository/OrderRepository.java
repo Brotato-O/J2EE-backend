@@ -8,10 +8,16 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Lock;
+import jakarta.persistence.LockModeType;
 import J2EE.com.example.project.entity.Order;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Integer> {
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT o FROM Order o WHERE o.id = :orderId")
+    Optional<Order> findByIdForUpdate(@Param("orderId") Integer orderId);
     // Lấy tất cả đơn hàng của 1 khách hàng (theo kh_id), sắp xếp mới nhất trước
     @Query("SELECT o FROM Order o WHERE o.khachHang.id = :khId ORDER BY o.id DESC")
     List<Order> findByKhachHangId(@Param("khId") Integer khId);

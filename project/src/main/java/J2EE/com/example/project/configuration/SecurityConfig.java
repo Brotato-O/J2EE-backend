@@ -1,7 +1,9 @@
 package J2EE.com.example.project.configuration;
 
 import java.util.List;
+import java.io.IOException;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -22,6 +24,8 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import J2EE.com.example.project.service.impl.CustomUserDetailsService;
+import J2EE.com.example.project.dto.response.ApiResponse;
+import J2EE.com.example.project.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpMethod;
 
@@ -32,6 +36,7 @@ public class SecurityConfig {
 
         private final JwtAuthenticationFilter jwtAuthenticationFilter;
         private final CustomUserDetailsService userDetailsService;
+        private final ObjectMapper objectMapper;
 
         @Bean
         public PasswordEncoder passwordEncoder() {
@@ -111,10 +116,12 @@ public class SecurityConfig {
                                 // ===== THÊM ĐOẠN NÀY VÀO =====
                                 .exceptionHandling(ex -> ex
                                                 .authenticationEntryPoint((request, response, authException) -> {
-                                                        System.out.println("LỖI XÁC THỰC: " + request.getRequestURI()
-                                                                        + " - " + authException.getMessage());
-                                                        response.sendError(401, "Unauthorized");
-                                                }))
+                                                        writeSecurityError(response, 401,
+                                                                        ErrorCode.AUTHENTICATION_REQUIRED.getMessage());
+                                                })
+                                                .accessDeniedHandler((request, response, accessDeniedException) ->
+                                                        writeSecurityError(response, 403,
+                                                                        ErrorCode.ACCESS_DENIED.getMessage())))
                                 // ===============================
 
                                 .authenticationProvider(
@@ -126,6 +133,12 @@ public class SecurityConfig {
                                                 .requestMatchers(
                                                                 "/api/v1/auth/register",
                                                                 "/api/v1/auth/login")
+                                                .permitAll()
+                                                .requestMatchers(
+                                                                "/api/v1/fulfillments/webhooks/ghtk",
+                                                                "/api/v1/payments/webhooks/vietqr",
+                                                                "/api/v1/payments/webhooks/vnpay",
+                                                                "/api/v1/payments/webhooks/momo")
                                                 .permitAll()
                                                 // Khách vãng lai được xem danh sách sản phẩm
                                                 .requestMatchers(
@@ -154,5 +167,18 @@ public class SecurityConfig {
                                                 UsernamePasswordAuthenticationFilter.class);
 
                 return http.build();
+        }
+
+        private void writeSecurityError(jakarta.servlet.http.HttpServletResponse response,
+                        int status, String message) throws IOException {
+                response.setStatus(status);
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                response.getWriter().write(objectMapper.writeValueAsString(
+                                ApiResponse.<Void>builder()
+                                                .code(status)
+                                                .message(message)
+                                                .data(null)
+                                                .build()));
         }
 }

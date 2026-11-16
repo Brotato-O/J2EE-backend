@@ -66,6 +66,12 @@ public class JwtAuthenticationFilter
 
                         UserDetails userDetails = userDetailsService
                                         .loadUserByUsername(email);
+                        System.out.println("========== JWT DEBUG ==========");
+                        System.out.println("Email: " + email);
+                        System.out.println("Token valid: " +
+                                        jwtService.isTokenValid(token, userDetails));
+                        System.out.println("Enabled: " + userDetails.isEnabled());
+                        System.out.println("Authorities: " + userDetails.getAuthorities());
 
                         if (jwtService.isTokenValid(
                                         token,
@@ -84,6 +90,9 @@ public class JwtAuthenticationFilter
                                                 .getContext()
                                                 .setAuthentication(
                                                                 authentication);
+                                System.out.println("Authentication: " +
+                                                SecurityContextHolder.getContext()
+                                                                .getAuthentication().isAuthenticated());
                         }
                 }
 

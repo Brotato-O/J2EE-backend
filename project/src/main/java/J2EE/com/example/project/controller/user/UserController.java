@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import J2EE.com.example.project.dto.request.user.UserCreateRequest;
 import J2EE.com.example.project.dto.request.user.UserUpdateRequest;
 import J2EE.com.example.project.dto.response.ApiResponse;
+import J2EE.com.example.project.exception.SuccessCode;
 import J2EE.com.example.project.dto.response.PageResponse;
 import J2EE.com.example.project.dto.response.user.UserResponse;
 import J2EE.com.example.project.service.UserService;
@@ -31,9 +32,11 @@ public class UserController {
         public ApiResponse<PageResponse<UserResponse>> getAllUsers(
                         Pageable pageable) {
 
+                System.out.println("========== GET ALL USERS CONTROLLER ==========");
+
                 return ApiResponse.<PageResponse<UserResponse>>builder()
-                                .code(200)
-                                .message("Lấy danh sách users thành công")
+                                .code(SuccessCode.LIST_RETRIEVED.getCode())
+                                .message(SuccessCode.LIST_RETRIEVED.getMessage())
                                 .data(userService.getAllUsers(pageable))
                                 .build();
         }
@@ -48,8 +51,8 @@ public class UserController {
                         @PathVariable Integer id) {
 
                 return ApiResponse.<UserResponse>builder()
-                                .code(200)
-                                .message("Lấy thông tin user thành công")
+                                .code(SuccessCode.RESOURCE_RETRIEVED.getCode())
+                                .message(SuccessCode.RESOURCE_RETRIEVED.getMessage())
                                 .data(userService.getUserById(id))
                                 .build();
         }
@@ -64,8 +67,8 @@ public class UserController {
                         @Valid @RequestBody UserCreateRequest request) {
 
                 return ApiResponse.<UserResponse>builder()
-                                .code(200)
-                                .message("Tạo user thành công")
+                                .code(SuccessCode.RESOURCE_CREATED.getCode())
+                                .message(SuccessCode.RESOURCE_CREATED.getMessage())
                                 .data(userService.createUser(request))
                                 .build();
         }
@@ -81,8 +84,8 @@ public class UserController {
                         @Valid @RequestBody UserUpdateRequest request) {
 
                 return ApiResponse.<UserResponse>builder()
-                                .code(200)
-                                .message("Cập nhật user thành công")
+                                .code(SuccessCode.RESOURCE_UPDATED.getCode())
+                                .message(SuccessCode.RESOURCE_UPDATED.getMessage())
                                 .data(userService.updateUser(id, request))
                                 .build();
         }
@@ -99,8 +102,8 @@ public class UserController {
                 userService.deleteUser(id);
 
                 return ApiResponse.<Void>builder()
-                                .code(200)
-                                .message("Xóa user thành công")
+                                .code(SuccessCode.RESOURCE_DELETED.getCode())
+                                .message(SuccessCode.RESOURCE_DELETED.getMessage())
                                 .build();
         }
 }
