@@ -32,6 +32,9 @@ public class ShippingWebhookEvent {
     @Column(name = "status_id", nullable = false)
     private Integer statusId;
 
+    @Column(name = "status_code", length = 50)
+    private String statusCode;
+
     @Column(nullable = false, columnDefinition = "JSON")
     private String payload;
 

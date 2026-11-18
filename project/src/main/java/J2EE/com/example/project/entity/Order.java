@@ -46,6 +46,12 @@ public class Order {
     private String status;
     @Column(name = "order_adress", nullable = false, length = 250)
     private String address;
+    @Column(name = "recipient_province", length = 100)
+    private String recipientProvince;
+    @Column(name = "recipient_district", length = 100)
+    private String recipientDistrict;
+    @Column(name = "recipient_ward", length = 100)
+    private String recipientWard;
     @Column(name = "order_totalprice", nullable = false)
     @Builder.Default
     private Integer totalPrice = 0;

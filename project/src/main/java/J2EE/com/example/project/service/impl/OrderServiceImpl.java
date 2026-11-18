@@ -67,8 +67,11 @@ public class OrderServiceImpl implements OrderService {
         Order order = Order.builder()
                 .khachHang(khachHang)
                 .orderDate(today)
-                .status(FulfillmentStatus.NEW.getDisplayName())
+                .status(FulfillmentStatus.NEW.name())
                 .address(request.getAddress())
+                .recipientProvince(request.getRecipientProvince())
+                .recipientDistrict(request.getRecipientDistrict())
+                .recipientWard(request.getRecipientWard())
                 .totalPrice(totalPrice)
                 .paymentMethod(request.getPaymentMethod() == null
                         ? PaymentMethod.VIETQR : request.getPaymentMethod())
@@ -137,7 +140,7 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findByIdAndKhachHangId(orderId, khachHang.getId())
                 .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
         // Chỉ được hủy khi trạng thái là "Chờ xác nhận"
-        if (!FulfillmentStatus.NEW.getDisplayName().equals(order.getStatus())) {
+        if (FulfillmentStatus.NEW != FulfillmentStatus.fromValue(order.getStatus())) {
             throw new AppException(ErrorCode.INVALID_ORDER_TRANSITION);
         }
         // Cộng lại tồn kho

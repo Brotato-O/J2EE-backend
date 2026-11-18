@@ -3,12 +3,15 @@ package J2EE.com.example.project.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import tools.jackson.databind.JsonNode;
 
 import J2EE.com.example.project.dto.response.ShipmentResponse;
 import J2EE.com.example.project.service.FulfillmentService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
+@Slf4j
 @RequestMapping("/api/v1/fulfillments")
 @RequiredArgsConstructor
 public class FulfillmentController {
@@ -33,19 +36,30 @@ public class FulfillmentController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/webhooks/ghtk")
-    public ResponseEntity<Void> ghtkWebhook(
-            @RequestParam String hash,
-            @RequestParam("label_id") String labelId,
-            @RequestParam("partner_id") String partnerId,
-            @RequestParam("status_id") Integer statusId,
-            @RequestParam("action_time") String actionTime,
-            @RequestParam(name = "reason_code", required = false) String reasonCode,
-            @RequestParam(name = "reason", required = false) String reason) {
-        fulfillmentService.handleGhtkWebhook(hash, labelId, partnerId, statusId,
-                actionTime, reasonCode, reason,
-                String.format("{\"label_id\":\"%s\",\"partner_id\":\"%s\",\"status_id\":%d,\"action_time\":\"%s\"}",
-                        labelId, partnerId, statusId, actionTime));
+    @PostMapping("/webhooks/ghn")
+    public ResponseEntity<Void> ghnWebhook(
+            @RequestBody JsonNode body,
+            @RequestHeader(value = "X-GHN-Webhook-Secret", required = false) String webhookSecret) {
+        String orderCode = body.path("OrderCode").asText("");
+        String eventType = body.path("Type").asText("");
+        String status = body.path("Status").asText("");
+        String eventTime = body.path("Time").asText("");
+        if (orderCode.isBlank() || eventType.isBlank() || eventTime.isBlank()) {
+            throw new J2EE.com.example.project.exception.AppException(
+                    J2EE.com.example.project.exception.ErrorCode.INVALID_GHN_WEBHOOK);
+        }
+
+        log.info("Received GHN webhook: orderCode={}, eventType={}, status={}, eventTime={}",
+                orderCode, eventType, status, eventTime);
+
+        fulfillmentService.handleGhnWebhook(
+                orderCode,
+                eventType,
+                status,
+                eventTime,
+                body.path("Reason").asText(""),
+                body.toString(),
+                webhookSecret);
         return ResponseEntity.ok().build();
     }
 

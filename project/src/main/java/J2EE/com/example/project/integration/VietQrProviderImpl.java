@@ -41,7 +41,8 @@ public class VietQrProviderImpl implements VietQrProvider {
 
     private void requireConfigured() {
         if (properties.getBankBin() == null || properties.getBankBin().isBlank()
-                || properties.getBankAccount() == null || properties.getBankAccount().isBlank()) {
+                || properties.getBankAccount() == null || properties.getBankAccount().isBlank()
+                || properties.getAccountName() == null || properties.getAccountName().isBlank()) {
             throw new AppException(ErrorCode.VIETQR_CONFIGURATION_INVALID);
         }
     }

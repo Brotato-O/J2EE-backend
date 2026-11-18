@@ -22,4 +22,5 @@ public class PaymentNotificationRequest {
     private String receivingAccount;
     private Instant transactionTime;
     private String checksum;
+    private String providerStatus;
 }

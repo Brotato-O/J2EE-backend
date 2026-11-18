@@ -13,6 +13,8 @@ public class PaymentQrResponse {
     private Long paymentId;
     private Integer orderId;
     private String transactionReference;
+    private String providerTransactionReference;
+    private String providerTransactionNo;
     private BigDecimal amount;
     private PaymentStatus status;
     private Instant expiresAt;

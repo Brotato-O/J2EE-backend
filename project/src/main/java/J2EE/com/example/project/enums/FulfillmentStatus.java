@@ -1,14 +1,14 @@
 package J2EE.com.example.project.enums;
 
 public enum FulfillmentStatus {
-    NEW("Chờ xác nhận"),
-    CONFIRMED("Đã xác nhận"),
-    PACKING("Đang đóng gói"),
-    SHIPPING("Đang giao"),
-    DELIVERED("Đã giao hàng"),
-    DELIVERY_FAILED("Giao hàng thất bại"),
-    RETURNED("Đã hoàn hàng"),
-    CANCELLED("Đã hủy");
+    NEW("NEW"),
+    CONFIRMED("CONFIRMED"),
+    PACKING("PACKING"),
+    SHIPPING("SHIPPING"),
+    DELIVERED("DELIVERED"),
+    DELIVERY_FAILED("DELIVERY_FAILED"),
+    RETURNED("RETURNED"),
+    CANCELLED("CANCELLED");
 
     private final String displayName;
 

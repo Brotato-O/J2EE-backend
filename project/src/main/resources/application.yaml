@@ -25,18 +25,31 @@ spring:
     expiration: ${JWT_EXPIRATION:86400000}
 
 app:
-  ghtk:
-    enabled: ${GHTK_ENABLED:false}
-    base-url: ${GHTK_BASE_URL:}
-    api-token: ${GHTK_API_TOKEN:}
-    client-source: ${GHTK_CLIENT_SOURCE:}
-    create-order-url: ${GHTK_CREATE_ORDER_URL:}
-    tracking-url-template: ${GHTK_TRACKING_URL_TEMPLATE:}
-    cancel-url-template: ${GHTK_CANCEL_URL_TEMPLATE:}
-    webhook-hash: ${GHTK_WEBHOOK_HASH:}
-    connect-timeout: ${GHTK_CONNECT_TIMEOUT:3s}
-    read-timeout: ${GHTK_READ_TIMEOUT:10s}
-    max-attempts: ${GHTK_MAX_ATTEMPTS:3}
+  ghn:
+    enabled: ${GHN_ENABLED:false}
+    base-url: ${GHN_BASE_URL:https://dev-online-gateway.ghn.vn}
+    api-token: ${GHN_API_TOKEN:}
+    shop-id: ${GHN_SHOP_ID:}
+    create-order-url: ${GHN_CREATE_ORDER_URL:/shiip/public-api/v2/shipping-order/create}
+    detail-order-url: ${GHN_DETAIL_ORDER_URL:/shiip/public-api/v2/shipping-order/detail}
+    cancel-order-url: ${GHN_CANCEL_ORDER_URL:/shiip/public-api/v2/switch-status/cancel}
+    webhook-secret: ${GHN_WEBHOOK_SECRET:}
+    from-name: ${GHN_FROM_NAME:}
+    from-phone: ${GHN_FROM_PHONE:}
+    from-address: ${GHN_FROM_ADDRESS:}
+    from-ward-name: ${GHN_FROM_WARD_NAME:}
+    from-district-name: ${GHN_FROM_DISTRICT_NAME:}
+    from-province-name: ${GHN_FROM_PROVINCE_NAME:}
+    service-type-id: ${GHN_SERVICE_TYPE_ID:2}
+    payment-type-id: ${GHN_PAYMENT_TYPE_ID:1}
+    required-note: ${GHN_REQUIRED_NOTE:KHONGCHOXEMHANG}
+    default-weight-grams: ${GHN_DEFAULT_WEIGHT_GRAMS:500}
+    default-length-cm: ${GHN_DEFAULT_LENGTH_CM:20}
+    default-width-cm: ${GHN_DEFAULT_WIDTH_CM:15}
+    default-height-cm: ${GHN_DEFAULT_HEIGHT_CM:10}
+    connect-timeout: ${GHN_CONNECT_TIMEOUT:3s}
+    read-timeout: ${GHN_READ_TIMEOUT:10s}
+    max-attempts: ${GHN_MAX_ATTEMPTS:3}
   vietqr:
     enabled: ${VIETQR_ENABLED:false}
     api-base-url: ${VIETQR_API_BASE_URL:}
@@ -54,20 +67,9 @@ app:
     payment-url: ${VNPAY_PAYMENT_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
     tmn-code: ${VNPAY_TMN_CODE:}
     hash-secret: ${VNPAY_HASH_SECRET:}
-    return-url: ${VNPAY_RETURN_URL:}
-    ipn-url: ${VNPAY_IPN_URL:}
-    webhook-secret: ${VNPAY_WEBHOOK_SECRET:}
+    return-url: ${VNPAY_RETURN_URL}
+    ipn-url: ${VNPAY_IPN_URL}
     expiration: ${VNPAY_EXPIRATION:PT15M}
-  momo:
-    enabled: ${MOMO_ENABLED:false}
-    endpoint: ${MOMO_ENDPOINT:https://test-payment.momo.vn/v2/gateway/api/create}
-    partner-code: ${MOMO_PARTNER_CODE:}
-    access-key: ${MOMO_ACCESS_KEY:}
-    secret-key: ${MOMO_SECRET_KEY:}
-    redirect-url: ${MOMO_REDIRECT_URL:}
-    ipn-url: ${MOMO_IPN_URL:}
-    webhook-secret: ${MOMO_WEBHOOK_SECRET:}
-    expiration: ${MOMO_EXPIRATION:PT15M}
 
 cloudinary:
   cloud-name: ${CLOUDINARY_CLOUD_NAME}

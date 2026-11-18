@@ -100,6 +100,8 @@ public class PaymentServiceImpl implements PaymentService {
         Payment payment = paymentRepository.findByTransactionReferenceForUpdate(
                 request.getTransactionReference())
                 .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
+        payment.setProviderTransactionReference(request.getTransactionReference());
+        payment.setProviderTransactionNo(request.getTransactionId());
         Order order = orderRepository.findByIdForUpdate(payment.getOrder().getId())
                 .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
         if (payment.getStatus() == PaymentStatus.SUCCESS) {
@@ -204,6 +206,8 @@ public class PaymentServiceImpl implements PaymentService {
                 .paymentId(payment.getId())
                 .orderId(orderId)
                 .transactionReference(payment.getTransactionReference())
+                .providerTransactionReference(payment.getProviderTransactionReference())
+                .providerTransactionNo(payment.getProviderTransactionNo())
                 .amount(payment.getAmount())
                 .status(payment.getStatus())
                 .expiresAt(payment.getExpiresAt())
@@ -252,12 +256,74 @@ public class PaymentServiceImpl implements PaymentService {
         reconcileInternal(request, provider.name());
     }
 
+    @Override
+    @Transactional
+    public void reconcileVnpay(Map<String, String> parameters) {
+        OnlinePaymentProvider gateway = findGateway(PaymentProviderType.VNPAY);
+        Map<String, Object> payload = new HashMap<>(parameters);
+        if (!gateway.verifyProviderCallback(payload)
+                || !gateway.isSuccessfulCallback(payload)) {
+            throw new AppException(ErrorCode.INVALID_PAYMENT_CALLBACK);
+        }
+        reconcileInternal(gateway.normalizeCallback(payload), PaymentProviderType.VNPAY.name());
+    }
+
+    @Override
+    public Map<String, String> handleVnpayIpn(Map<String, String> parameters) {
+        String transactionReference = parameters.getOrDefault("vnp_TxnRef", "");
+        if (transactionReference.isBlank()
+                || parameters.get("vnp_SecureHash") == null
+                || parameters.get("vnp_ResponseCode") == null
+                || parameters.get("vnp_TransactionStatus") == null
+                || parameters.get("vnp_Amount") == null) {
+            return Map.of(
+                    "RspCode", "99",
+                    "Message", "Missing required VNPay parameters");
+        }
+        try {
+            reconcileVnpay(parameters);
+            return Map.of(
+                    "RspCode", "00",
+                    "Message", "Confirm Success");
+        } catch (AppException exception) {
+            ErrorCode error = exception.getErrorCode();
+            if (error == ErrorCode.INVALID_PAYMENT_CALLBACK
+                    || error == ErrorCode.PAYMENT_CHECKSUM_INVALID) {
+                return Map.of("RspCode", "97", "Message", "Invalid Checksum");
+            }
+            if (error == ErrorCode.TRANSACTION_NOT_FOUND) {
+                return Map.of("RspCode", "01", "Message", "Order not found");
+            }
+            if (error == ErrorCode.PAYMENT_ALREADY_SUCCESSFUL) {
+                return Map.of("RspCode", "02", "Message", "Order already confirmed");
+            }
+            if (error == ErrorCode.PAYMENT_AMOUNT_INVALID
+                    || error == ErrorCode.PAYMENT_DATA_MISMATCH) {
+                return Map.of("RspCode", "04", "Message", "Invalid amount");
+            }
+            return Map.of("RspCode", "99", "Message", "Unknown error");
+        } catch (IllegalArgumentException exception) {
+            return Map.of("RspCode", "04", "Message", "Invalid amount");
+        } catch (Exception exception) {
+            return Map.of("RspCode", "99", "Message", "Unknown error");
+        }
+    }
+
+    private OnlinePaymentProvider findGateway(PaymentProviderType provider) {
+        return onlinePaymentProviders.stream()
+                .filter(item -> item.type() == provider)
+                .findFirst()
+                .orElseThrow(() -> new AppException(ErrorCode.PAYMENT_PROVIDER_UNAVAILABLE));
+    }
+
     private PaymentQrResponse toResponse(Payment payment) {
         QrData qr = vietQrProvider.createQr(payment);
         return PaymentQrResponse.builder()
                 .paymentId(payment.getId())
                 .orderId(payment.getOrder().getId())
                 .transactionReference(payment.getTransactionReference())
+                .providerTransactionReference(payment.getProviderTransactionReference())
+                .providerTransactionNo(payment.getProviderTransactionNo())
                 .amount(payment.getAmount())
                 .status(payment.getStatus())
                 .expiresAt(payment.getExpiresAt())

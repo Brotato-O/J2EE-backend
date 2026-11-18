@@ -28,6 +28,12 @@ public class Payment {
     @Column(name = "transaction_reference", nullable = false, unique = true, length = 100)
     private String transactionReference;
 
+    @Column(name = "provider_transaction_reference", length = 100)
+    private String providerTransactionReference;
+
+    @Column(name = "provider_transaction_no", length = 150)
+    private String providerTransactionNo;
+
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal amount;
 

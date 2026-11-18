@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import J2EE.com.example.project.configuration.GhtkProperties;
+import J2EE.com.example.project.configuration.GhnProperties;
 import J2EE.com.example.project.dto.response.ShipmentResponse;
 import J2EE.com.example.project.entity.Fulfillment;
 import J2EE.com.example.project.enums.FulfillmentStatus;
@@ -29,6 +29,8 @@ import J2EE.com.example.project.repository.OrderRepository;
 import J2EE.com.example.project.repository.ShipmentRepository;
 import J2EE.com.example.project.repository.ShippingWebhookEventRepository;
 import J2EE.com.example.project.repository.PaymentRepository;
+import J2EE.com.example.project.repository.OrderDetailRepository;
+import J2EE.com.example.project.repository.ProChitietRepository;
 import J2EE.com.example.project.service.FulfillmentService;
 import J2EE.com.example.project.service.OrderLifecycleService;
 import J2EE.com.example.project.exception.AppException;
@@ -44,10 +46,12 @@ public class FulfillmentServiceImpl implements FulfillmentService {
     private final ShipmentRepository shipmentRepository;
     private final ShippingWebhookEventRepository webhookEventRepository;
     private final OrderLifecycleService lifecycleService;
-    private final ShippingProvider ghtkProvider;
-    private final GhtkProperties ghtkProperties;
+    private final ShippingProvider ghnProvider;
+    private final GhnProperties ghnProperties;
     private final ObjectMapper objectMapper;
     private final PaymentRepository paymentRepository;
+    private final OrderDetailRepository orderDetailRepository;
+    private final ProChitietRepository proChitietRepository;
 
     @Override
     @Transactional
@@ -63,28 +67,32 @@ public class FulfillmentServiceImpl implements FulfillmentService {
         Fulfillment fulfillment = fulfillmentRepository.findByOrderIdForUpdate(orderId)
                 .orElseGet(() -> fulfillmentRepository.save(Fulfillment.builder()
                         .order(order)
-                        .status(FulfillmentStatus.CONFIRMED)
+                        .status(FulfillmentStatus.fromValue(order.getStatus()))
                         .build()));
         Shipment existing = shipmentRepository.findByFulfillmentId(fulfillment.getId()).orElse(null);
         if (existing != null && existing.getTrackingCode() != null) {
             return toResponse(existing);
+        }
+        FulfillmentStatus currentStatus = FulfillmentStatus.fromValue(order.getStatus());
+        if (currentStatus != FulfillmentStatus.CONFIRMED) {
+            throw new AppException(ErrorCode.INVALID_ORDER_TRANSITION);
         }
         if (!lifecycleService.tryTransition(order, FulfillmentStatus.PACKING, "Shipment creation requested")) {
             throw new AppException(ErrorCode.INVALID_ORDER_TRANSITION);
         }
 
         Shipment shipment = existing == null
-                ? Shipment.builder().fulfillment(fulfillment).provider(ShippingProviderType.GHTK).build()
+                ? Shipment.builder().fulfillment(fulfillment).provider(ShippingProviderType.GHN).build()
                 : existing;
         shipment.setStatus(ShipmentStatus.CREATED);
-        shipment.setProvider(ShippingProviderType.GHTK);
-        ShippingCreateResult result = ghtkProvider.createShipment(order, shipment);
+        shipment.setProvider(ShippingProviderType.GHN);
+        ShippingCreateResult result = ghnProvider.createShipment(order, shipment);
         shipment.setTrackingCode(result.trackingCode());
         shipment.setProviderOrderCode(result.providerOrderCode());
         shipment.setStatus(ShipmentStatus.CONFIRMED);
         shipmentRepository.save(shipment);
         lifecycleService.tryTransition(order, FulfillmentStatus.SHIPPING,
-                "GHTK shipment created");
+                "GHN shipment created");
         return toResponse(shipment);
     }
 
@@ -103,34 +111,56 @@ public class FulfillmentServiceImpl implements FulfillmentService {
     @Transactional
     public void cancelShipment(Integer orderId) {
         Shipment shipment = getShipmentEntity(orderId);
+        if (shipment.getStatus() == ShipmentStatus.CANCELLED) {
+            return;
+        }
         if (shipment.getStatus() == ShipmentStatus.DELIVERED
-                || shipment.getStatus() == ShipmentStatus.RETURNED) {
+                || shipment.getStatus() == ShipmentStatus.RETURNED
+                || shipment.getStatus() == ShipmentStatus.RETURNING
+                || shipment.getStatus() == ShipmentStatus.PICKED_UP
+                || shipment.getStatus() == ShipmentStatus.SHIPPING
+                || shipment.getStatus() == ShipmentStatus.DELIVERY_FAILED) {
             throw new AppException(ErrorCode.SHIPMENT_CANNOT_CANCEL);
         }
-        ghtkProvider.cancel(shipment.getTrackingCode());
+        FulfillmentStatus orderStatus = FulfillmentStatus.fromValue(
+                shipment.getFulfillment().getOrder().getStatus());
+        if (orderStatus != FulfillmentStatus.NEW
+                && orderStatus != FulfillmentStatus.CONFIRMED
+                && orderStatus != FulfillmentStatus.PACKING) {
+            throw new AppException(ErrorCode.SHIPMENT_CANNOT_CANCEL);
+        }
+        if (shipment.getTrackingCode() == null || shipment.getTrackingCode().isBlank()) {
+            throw new AppException(ErrorCode.SHIPPING_RESPONSE_INVALID);
+        }
+        ghnProvider.cancel(shipment.getTrackingCode());
+        restoreStock(shipment.getFulfillment().getOrder());
         shipment.setStatus(ShipmentStatus.CANCELLED);
+        shipment.setStockReleased(true);
         shipmentRepository.save(shipment);
         lifecycleService.transition(orderId, FulfillmentStatus.CANCELLED, "Shipment cancelled");
     }
 
     @Override
     @Transactional
-    public void handleGhtkWebhook(String hash, String labelId, String partnerId, Integer statusId,
-            String actionTime, String reasonCode, String reason, String payload) {
-        if (ghtkProperties.getWebhookHash() == null
-                || ghtkProperties.getWebhookHash().isBlank()
-                || !ghtkProperties.getWebhookHash().equals(hash)) {
-            throw new IllegalArgumentException(ErrorCode.INVALID_GHTK_WEBHOOK.getMessage());
+    public void handleGhnWebhook(String orderCode, String eventType, String status,
+            String eventTime, String reason, String payload, String webhookSecret) {
+        if (ghnProperties.getWebhookSecret() != null
+                && !ghnProperties.getWebhookSecret().isBlank()
+                && !ghnProperties.getWebhookSecret().equals(webhookSecret)) {
+            throw new AppException(ErrorCode.INVALID_GHN_WEBHOOK);
         }
-        String eventKey = labelId + ":" + statusId + ":" + actionTime;
-        if (webhookEventRepository.findByProviderAndEventKey("GHTK", eventKey).isPresent()) {
+
+
+        String eventKey = orderCode + ":" + eventType + ":" + eventTime;
+        if (webhookEventRepository.findByProviderAndEventKey("GHN", eventKey).isPresent()) {
             return;
         }
         ShippingWebhookEvent event = ShippingWebhookEvent.builder()
-                .provider("GHTK")
+                .provider("GHN")
                 .eventKey(eventKey)
-                .trackingCode(labelId)
-                .statusId(statusId)
+                .trackingCode(orderCode)
+                .statusId(0)
+                .statusCode(status)
                 .payload(payload)
                 .build();
         try {
@@ -139,9 +169,9 @@ public class FulfillmentServiceImpl implements FulfillmentService {
             return;
         }
 
-        Shipment shipment = shipmentRepository.findByTrackingCodeForUpdate(labelId)
+        Shipment shipment = shipmentRepository.findByTrackingCodeForUpdate(orderCode)
                 .orElseThrow(() -> new AppException(ErrorCode.SHIPMENT_NOT_FOUND));
-        ShipmentStatus shipmentStatus = mapShipmentStatus(statusId);
+        ShipmentStatus shipmentStatus = mapShipmentStatus(status);
         if (statusRank(shipmentStatus) < statusRank(shipment.getStatus())
                 && shipmentStatus != ShipmentStatus.DELIVERY_FAILED) {
             event.setProcessed(true);
@@ -150,9 +180,9 @@ public class FulfillmentServiceImpl implements FulfillmentService {
         }
         shipment.setStatus(shipmentStatus);
         shipmentRepository.save(shipment);
-        FulfillmentStatus fulfillmentStatus = mapFulfillmentStatus(statusId);
+        FulfillmentStatus fulfillmentStatus = mapFulfillmentStatus(status);
         lifecycleService.tryTransition(shipment.getFulfillment().getOrder(), fulfillmentStatus,
-                "GHTK webhook " + statusId + ": " + reason);
+                "GHN webhook " + status + ": " + reason);
         event.setProcessed(true);
         event.setProcessedAt(Instant.now());
     }
@@ -160,31 +190,47 @@ public class FulfillmentServiceImpl implements FulfillmentService {
     private Shipment getShipmentEntity(Integer orderId) {
         Fulfillment fulfillment = fulfillmentRepository.findByOrderIdForUpdate(orderId)
                 .orElseThrow(() -> new AppException(ErrorCode.FULFILLMENT_NOT_FOUND));
-        return shipmentRepository.findByFulfillmentId(fulfillment.getId())
+        return shipmentRepository.findByFulfillmentIdForUpdate(fulfillment.getId())
                 .orElseThrow(() -> new AppException(ErrorCode.SHIPMENT_NOT_FOUND));
     }
 
-    private ShipmentStatus mapShipmentStatus(Integer statusId) {
-        return switch (statusId) {
-            case -1 -> ShipmentStatus.CANCELLED;
-            case 2, 12, 30, 31, 91 -> ShipmentStatus.CONFIRMED;
-            case 3, 123 -> ShipmentStatus.PICKED_UP;
-            case 4, 10, 410 -> ShipmentStatus.SHIPPING;
-            case 5, 6, 45 -> ShipmentStatus.DELIVERED;
-            case 7, 8, 127, 128, 49 -> ShipmentStatus.DELIVERY_FAILED;
-            case 9 -> ShipmentStatus.DELIVERY_FAILED;
-            case 20 -> ShipmentStatus.RETURNING;
-            case 21, 26 -> ShipmentStatus.RETURNED;
+    private void restoreStock(Order order) {
+        orderDetailRepository.findByOrderId(order.getId()).forEach(detail -> {
+            proChitietRepository
+                    .findByProductIdAndColorIdAndSizeId(
+                            detail.getProduct().getId(),
+                            detail.getColor().getId(),
+                            detail.getSize().getId())
+                    .ifPresent(variant -> {
+                        int restoredStock = (variant.getStockQuantity() == null ? 0 : variant.getStockQuantity())
+                                + detail.getQuantity();
+                        variant.setStockQuantity(restoredStock);
+                        proChitietRepository.save(variant);
+                    });
+        });
+    }
+
+    private ShipmentStatus mapShipmentStatus(String status) {
+        return switch (status == null ? "" : status.toLowerCase()) {
+            case "cancel" -> ShipmentStatus.CANCELLED;
+            case "ready_to_pick", "picking" -> ShipmentStatus.CONFIRMED;
+            case "picked" -> ShipmentStatus.PICKED_UP;
+            case "delivering", "delivery_fail" -> status.equalsIgnoreCase("delivery_fail")
+                    ? ShipmentStatus.DELIVERY_FAILED : ShipmentStatus.SHIPPING;
+            case "delivered" -> ShipmentStatus.DELIVERED;
+            case "return", "returning" -> ShipmentStatus.RETURNING;
+            case "returned", "return_fail", "damage", "lost" -> status.equalsIgnoreCase("returned")
+                    ? ShipmentStatus.RETURNED : ShipmentStatus.DELIVERY_FAILED;
             default -> ShipmentStatus.CREATED;
         };
     }
 
-    private FulfillmentStatus mapFulfillmentStatus(Integer statusId) {
-        return switch (statusId) {
-            case -1 -> FulfillmentStatus.CANCELLED;
-            case 5, 6, 45 -> FulfillmentStatus.DELIVERED;
-            case 9, 49, 410 -> FulfillmentStatus.DELIVERY_FAILED;
-            case 20, 21, 26 -> FulfillmentStatus.RETURNED;
+    private FulfillmentStatus mapFulfillmentStatus(String status) {
+        return switch (status == null ? "" : status.toLowerCase()) {
+            case "cancel" -> FulfillmentStatus.CANCELLED;
+            case "delivered" -> FulfillmentStatus.DELIVERED;
+            case "delivery_fail", "damage", "lost", "return_fail" -> FulfillmentStatus.DELIVERY_FAILED;
+            case "return", "returning", "returned" -> FulfillmentStatus.RETURNED;
             default -> FulfillmentStatus.SHIPPING;
         };
     }

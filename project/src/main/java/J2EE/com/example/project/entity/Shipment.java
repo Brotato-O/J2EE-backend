@@ -27,7 +27,7 @@ public class Shipment {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     @Builder.Default
-    private ShippingProviderType provider = ShippingProviderType.GHTK;
+    private ShippingProviderType provider = ShippingProviderType.GHN;
 
     @Column(name = "tracking_code", length = 100)
     private String trackingCode;
@@ -46,6 +46,10 @@ public class Shipment {
 
     @Column(name = "last_error", length = 500)
     private String lastError;
+
+    @Column(name = "stock_released", nullable = false)
+    @Builder.Default
+    private boolean stockReleased = false;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;

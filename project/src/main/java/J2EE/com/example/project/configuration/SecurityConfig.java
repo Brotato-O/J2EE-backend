@@ -135,10 +135,10 @@ public class SecurityConfig {
                                                                 "/api/v1/auth/login")
                                                 .permitAll()
                                                 .requestMatchers(
-                                                                "/api/v1/fulfillments/webhooks/ghtk",
+                                                                "/api/v1/fulfillments/webhooks/ghn",
                                                                 "/api/v1/payments/webhooks/vietqr",
                                                                 "/api/v1/payments/webhooks/vnpay",
-                                                                "/api/v1/payments/webhooks/momo")
+                                                                "/api/v1/payments/vnpay/return")
                                                 .permitAll()
                                                 // Khách vãng lai được xem danh sách sản phẩm
                                                 .requestMatchers(
