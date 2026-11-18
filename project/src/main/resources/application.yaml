@@ -21,7 +21,7 @@ spring:
     baseline-version: ${FLYWAY_BASELINE_VERSION:0}
   
   jwt:
-    secret: ${JWT_SECRET:}
+    secret: ${JWT_SECRET:} 
     expiration: ${JWT_EXPIRATION:86400000}
 
 app:
@@ -70,6 +70,6 @@ app:
     expiration: ${MOMO_EXPIRATION:PT15M}
 
 cloudinary:
-  cloud-name: ${CLOUDINARY_CLOUD_NAME}
-  api-key: ${CLOUDINARY_API_KEY}
-  api-secret: ${CLOUDINARY_API_SECRET}
+  cloud-name: pzo1rv9q
+  api-key: 443519888429842
+  api-secret: 1ik_OlkOE93OcCyktjnqPVSr18Y
