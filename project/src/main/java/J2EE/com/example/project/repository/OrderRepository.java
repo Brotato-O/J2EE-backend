@@ -16,6 +16,7 @@ import J2EE.com.example.project.entity.Order;
 public interface OrderRepository extends JpaRepository<Order, Integer> {
 
     // @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT o FROM Order o WHERE o.id = :orderId")
     Optional<Order> findByIdForUpdate(@Param("orderId") Integer orderId);
 
